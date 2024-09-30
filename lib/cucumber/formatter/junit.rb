@@ -31,6 +31,7 @@ module Cucumber
           h[k] = {
             feature: nil,
             failures: 0,
+            flakes: 0,
             errors: 0,
             tests: 0,
             skipped: 0,
@@ -42,7 +43,13 @@ module Cucumber
 
       def on_test_case_started(event)
         test_case = event.test_case
-        start_feature(test_case) unless same_feature_as_previous_test_case?(test_case)
+        # If this is a retry, make it be known and track the number
+        if same_feature_as_previous_test_case?(test_case)
+          @retry_number = !@retry_number.nil? ? @retry_number + 1 : 1
+        else
+          @retry_number = nil
+        end
+        start_feature(test_case) unless !@retry_number.nil?
         @failing_test_step = nil
         # In order to fill out <system-err/> and <system-out/>, we need to
         # intercept the $stderr and $stdout
@@ -97,6 +104,7 @@ module Cucumber
           failures: feature_data[:failures],
           errors: feature_data[:errors],
           skipped: feature_data[:skipped],
+          flakes: feature_data[:flakes],
           tests: feature_data[:tests],
           time: format('%<time>.6f', time: feature_data[:time]),
           name: feature_data[:feature].name
@@ -143,6 +151,9 @@ module Cucumber
           if !result.passed? && result.ok?(strict: @config.strict)
             @current_feature_data[:builder].skipped
             @current_feature_data[:skipped] += 1
+          elsif !@retry_number.nil? && result.ok?(strict: @config.strict)
+            @current_feature_data[:flakes] += @retry_number
+            @current_feature_data[:failures] -= @retry_number
           elsif !result.passed?
             status = result.to_sym
             exception = get_backtrace_object(result)
@@ -246,6 +257,8 @@ module Cucumber
       def passed(*) end
 
       def failed(*) end
+
+      def flaked(*) end
 
       def undefined(*) end
 

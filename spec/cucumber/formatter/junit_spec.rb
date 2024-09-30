@@ -260,6 +260,46 @@ module Cucumber
             it { expect(@doc.to_s).not_to match(/type="skipped"/) }
           end
 
+          describe 'scenario with flaky test in junit report' do
+            before(:each) do
+              # The first run gets fired off by the spec suite, so we need two more:
+              actual_runtime.visitor = Fanout.new([@formatter])
+              receiver = Cucumber::Core::Test::Runner.new(event_bus)
+
+              event_bus.gherkin_source_read(gherkin_doc.uri, gherkin_doc.body)
+
+              # Second run
+              compile [gherkin_doc], receiver, filters, event_bus
+              event_bus.test_run_finished
+
+              # Third
+              compile [gherkin_doc], receiver, filters, event_bus
+              event_bus.test_run_finished
+
+              @doc = Nokogiri.XML(@formatter.written_files.values.first)
+            end
+
+            define_steps do
+              Given('a flaky scenario') do
+                if $current_run.nil?
+                  $current_run = 1
+                else
+                  $current_run += 1
+                end
+                raise "flake-#{$current_run}" if $current_run != 3
+              end
+            end
+
+            define_feature <<~FEATURE
+              Feature: junit report with flaky test
+
+                Scenario: flaky a test and junit report of the same
+                  Given a flaky scenario
+            FEATURE
+
+            it { expect(@doc.to_s).to match(/flakes="2"/) }
+          end
+
           describe 'scenario with skipped test in junit report' do
             define_feature <<~FEATURE
               Feature: junit report with skipped test
