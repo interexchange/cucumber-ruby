@@ -152,8 +152,8 @@ module Cucumber
             @current_feature_data[:builder].skipped
             @current_feature_data[:skipped] += 1
           elsif !@retry_number.nil? && result.ok?(strict: @config.strict)
-            @current_feature_data[:flakes] += @retry_number
-            @current_feature_data[:failures] -= @retry_number
+            @current_feature_data[:flakes] += 1
+            @current_feature_data[:failures] -= 1
           elsif !result.passed?
             status = result.to_sym
             exception = get_backtrace_object(result)
