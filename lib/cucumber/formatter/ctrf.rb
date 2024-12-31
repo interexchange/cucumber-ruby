@@ -11,7 +11,7 @@ module Cucumber
       include Io
 
       def initialize(config)
-        out_path = File.join(config.out_stream, "#{Time.now.to_i}.ctrf.json")
+        out_path = "#{config.out_stream}#{Time.now.to_i}.ctrf.json"
         @io = ensure_io(out_path, config.error_stream)
         @ast_lookup = AstLookup.new(config)
         @tests = {}
