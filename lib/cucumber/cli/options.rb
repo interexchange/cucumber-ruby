@@ -29,6 +29,7 @@ module Cucumber
           "#{INDENT}Please consider using the message formatter\n"\
           "#{INDENT}with the standalone json-formatter\n" \
           "#{INDENT}(https://github.com/cucumber/cucumber/tree/master/json-formatter)."],
+        'ctrf' => ['Cucumber::Formatter::Ctrf', "Generates a report in CTRF format."],
         'message' => ['Cucumber::Formatter::Message', 'Prints each message in NDJSON form, which can then be consumed by other tools.'],
         'html' => ['Cucumber::Formatter::HTML', 'Outputs HTML report'],
         'summary' => ['Cucumber::Formatter::Summary', 'Summary output of feature and scenarios']
