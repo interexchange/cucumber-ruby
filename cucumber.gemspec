@@ -16,12 +16,14 @@ Gem::Specification.new do |s|
     'changelog_uri' => 'https://github.com/cucumber/cucumber-ruby/blob/main/CHANGELOG.md',
     'documentation_uri' => 'https://www.rubydoc.info/github/cucumber/cucumber-ruby/',
     'mailing_list_uri' => 'https://groups.google.com/forum/#!forum/cukes',
-    'source_code_uri' => 'https://github.com/cucumber/cucumber-ruby'
+    'source_code_uri' => 'https://github.com/cucumber/cucumber-ruby',
+    'funding_uri' => 'https://opencollective.com/cucumber'
   }
 
   s.required_ruby_version = '>= 3.0'
   s.required_rubygems_version = '>= 3.2.8'
 
+  s.add_dependency 'base64', '~> 0.2'
   s.add_dependency 'builder', '~> 3.2'
   s.add_dependency 'cucumber-ci-environment', '> 9', '< 11'
   s.add_dependency 'cucumber-core', '> 13', '< 14'
@@ -30,6 +32,7 @@ Gem::Specification.new do |s|
   s.add_dependency 'cucumber-html-formatter', '> 20.3', '< 22'
   s.add_dependency 'cucumber-messages', '> 19', '< 26'
   s.add_dependency 'diff-lcs', '~> 1.5'
+  s.add_dependency 'logger', '~> 1.6'
   s.add_dependency 'mini_mime', '~> 1.1'
   s.add_dependency 'multi_test', '~> 1.1'
   s.add_dependency 'sys-uname', '~> 1.2'
