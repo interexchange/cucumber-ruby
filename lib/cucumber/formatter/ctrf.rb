@@ -12,6 +12,7 @@ module Cucumber
 
       def initialize(config)
         out_path = "#{config.out_stream}#{Time.now.to_i}.ctrf.json"
+        ensure_dir(File.dirname(out_path), 'ctrf')
         @io = ensure_io(out_path, config.error_stream)
         @ast_lookup = AstLookup.new(config)
         @tests = {}
@@ -26,16 +27,16 @@ module Cucumber
       def on_test_case_started(event)
         # Set up the object for use if it doesn't exist already
         # It might, if retries
-        if !@tests.key?(event.test_case.hash)
-          @tests[event.test_case.hash] = {
-            name: event.test_case.name,
-            suite: event.test_case.location.file,
-            filePath: event.test_case.location.to_s,
-            extra: {
-              hash: event.test_case.hash
-            }
+        return if @tests.key?(event.test_case.hash)
+
+        @tests[event.test_case.hash] = {
+          name: event.test_case.name,
+          suite: event.test_case.location.file,
+          filePath: event.test_case.location.to_s,
+          extra: {
+            hash: event.test_case.hash
           }
-        end
+        }
       end
 
       def on_test_step_started(event)
@@ -48,7 +49,7 @@ module Cucumber
 
       def on_test_case_finished(event)
         test = @tests[event.test_case.hash]
-        test[:duration] = event.result.duration.nanoseconds / 1000000
+        test[:duration] = event.result.duration.nanoseconds / 1_000_000
 
         # Pull existing status, if any
         existing_status = test[:status]
@@ -56,21 +57,19 @@ module Cucumber
         test[:rawStatus] = event.result.to_sym
 
         # If this is a retry, we failed last time and passed this time, it's flaky
-        test[:flaky] = !existing_status.nil? && existing_status = "failed" && test[:status] == "passed"
-        if !existing_status.nil?
-          test[:retries] = 0 if !test.key?(:retries)
+        test[:flaky] = !existing_status.nil? && existing_status = 'failed' && test[:status] == 'passed'
+        unless existing_status.nil?
+          test[:retries] = 0 unless test.key?(:retries)
           test[:retries] += 1
         end
 
         # Attach error information, if any
         test[:message] = event.result.to_message.message
-        exception = get_backtrace_object(event.result) if !event.result.passed?
+        exception = get_backtrace_object(event.result) unless event.result.passed?
 
         # If this wasn't the first run, move the trace to extra
         if test.key?(:trace)
-          if !test[:extra].key?(:previous_traces)
-            test[:extra][:previous_traces] = []
-          end
+          test[:extra][:previous_traces] = [] unless test[:extra].key?(:previous_traces)
           test[:extra][:previous_traces].push(test[:trace])
           test.delete(:trace)
         end
@@ -82,15 +81,15 @@ module Cucumber
         result = {
           results: {
             tool: {
-              name: "Cucumber-Ruby"
+              name: 'Cucumber-Ruby'
             },
             summary: {
               tests: @tests.count,
-              passed: @tests.values.select {|test| test[:status] == "passed"}.count,
-              failed: @tests.values.select {|test| test[:status] == "failed"}.count,
-              pending: @tests.values.select {|test| test[:status] == "pending"}.count,
-              skipped: @tests.values.select {|test| test[:status] == "skipped"}.count,
-              other: @tests.values.select {|test| test[:status] == "other"}.count,
+              passed: @tests.values.select { |test| test[:status] == 'passed' }.count,
+              failed: @tests.values.select { |test| test[:status] == 'failed' }.count,
+              pending: @tests.values.select { |test| test[:status] == 'pending' }.count,
+              skipped: @tests.values.select { |test| test[:status] == 'skipped' }.count,
+              other: @tests.values.select { |test| test[:status] == 'other' }.count,
               start: @run_start,
               stop: Time.now.to_i
             },
@@ -130,15 +129,15 @@ module Cucumber
       def sym_to_status(sym)
         case sym
         when :failed
-          "failed"
+          'failed'
         when :passed
-          "passed"
+          'passed'
         when :skipped
-          "skipped"
+          'skipped'
         when :pending
-          "pending"
+          'pending'
         else
-          "other"
+          'other'
         end
       end
     end
