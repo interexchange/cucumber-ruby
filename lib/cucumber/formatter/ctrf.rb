@@ -16,6 +16,7 @@ module Cucumber
         @io = ensure_io(out_path, config.error_stream)
         @ast_lookup = AstLookup.new(config)
         @tests = {}
+        @bc = ActiveSupport::BacktraceCleaner.new
         @run_start = Time.now.to_i
         config.on_event :test_case_started, &method(:on_test_case_started)
         config.on_event :test_case_finished, &method(:on_test_case_finished)
@@ -123,7 +124,7 @@ module Cucumber
       end
 
       def format_exception(exception)
-        (["#{exception.message} (#{exception.class})"] + exception.backtrace).join("\n")
+        (["#{exception.message} (#{exception.class})"] + @bc.clean(exception.backtrace)[..10]).join("\n")
       end
 
       def sym_to_status(sym)
